@@ -1,53 +1,41 @@
 import os
-import time
 import requests
-import schedule
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-from urllib.request import urlretrieve
+from datetime import datetime, timedelta, timezone
+import time
 
-# 创建保存图片的目录
-save_dir = "ld"
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
+# 创建ld文件夹（如果不存在）
+os.makedirs('E:/ld', exist_ok=True)
 
-# 要请求的URL
-url = "https://data.cma.cn/data/online.html?dataCode=RAD__B0_CR&dataTime=20241003053000"
-
-def fetch_and_save_images():
-    try:
-        # 请求页面
-        response = requests.get(url)
-        response.raise_for_status()
-        
-        # 解析HTML内容
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 找到包含 "image.data.cma.cn/vis/" 的图片链接
-        for img_tag in soup.find_all('img'):
-            img_url = img_tag.get('src')
-            if "image.data.cma.cn/vis/" in img_url:
-                # 完整的图片URL
-                full_img_url = urljoin(url, img_url)
-                # 生成保存路径
-                img_name = os.path.join(save_dir, os.path.basename(img_url))
-                
-                # 下载图片
-                urlretrieve(full_img_url, img_name)
-                print(f"已下载: {img_name}")
-    
-    except Exception as e:
-        print(f"发生错误: {e}")
-
-# 先获取一次图片
-fetch_and_save_images()
-
-# 定时任务：每6分钟执行一次
-schedule.every(6).minutes.do(fetch_and_save_images)
-
-print("开始执行定时任务，每6分钟请求并保存图片...")
-
-# 循环执行定时任务
 while True:
-    schedule.run_pending()
-    time.sleep(1)
+    # 获取当前UTC时间
+    utc_now = datetime.now(timezone.utc)
+
+    # 格式化URL参数（使用UTC时间）
+    year = utc_now.strftime("%Y")
+    month = utc_now.strftime("%m")
+    day = utc_now.strftime("%d")
+    time_str = utc_now.strftime("%Y%m%d%H%M00")
+
+    # 构建图片URL
+    url = f"https://weather.cma.cn/file/{year}/{month}/{day}/Z_RADA_I_Z9574_{time_str}_P_DOR_RDCP_R.PNG"
+
+    # 获取当前时间（UTC+8）用于保存文件名
+    local_now = utc_now + timedelta(hours=8)
+    print(f"Downloading from URL: {url}")
+
+    # 下载图片
+    response = requests.get(url)
+    if response.status_code == 200:
+        # 重命名文件为保存时间（UTC+8）
+        filename = f"E:/ld/{local_now.strftime('%Y%m%d%H%M%S')}.PNG"
+        try:
+            with open(filename, "wb") as file:
+                file.write(response.content)
+            print(f"图片保存成功！文件名: {filename}")
+        except Exception as e:
+            print(f"保存文件时出错: {e}")
+    else:
+        print("下载失败！状态码:", response.status_code)
+
+    # 等待6分钟
+    time.sleep(360)  # 360秒 = 6分钟
