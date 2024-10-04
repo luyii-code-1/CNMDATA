@@ -7,8 +7,8 @@ import time
 os.makedirs('E:/ld', exist_ok=True)
 
 while True:
-    # 获取当前UTC时间
-    utc_now = datetime.now(timezone.utc)
+    # 获取当前UTC时间并减去20分钟
+    utc_now = datetime.now(timezone.utc) - timedelta(minutes=18)
 
     # 格式化URL参数（使用UTC时间）
     year = utc_now.strftime("%Y")
@@ -17,7 +17,7 @@ while True:
     time_str = utc_now.strftime("%Y%m%d%H%M00")
 
     # 构建图片URL
-    url = f"https://weather.cma.cn/file/{year}/{month}/{day}/Z_RADA_I_Z9574_{time_str}_P_DOR_RDCP_R.PNG"
+    url = f"http://image.nmc.cn/product/{year}/{month}/{day}/RDCP/medium/SEVP_AOC_RDCP_SLDAS3_ECREF_ACHN_L88_PI_{time_str}000.PNG"
 
     # 获取当前时间（UTC+8）用于保存文件名
     local_now = utc_now + timedelta(hours=8)
@@ -38,4 +38,4 @@ while True:
         print("下载失败！状态码:", response.status_code)
 
     # 等待6分钟
-    time.sleep(360)  # 360秒 = 6分钟
+    time.sleep(60)  # 360秒 = 6分钟
